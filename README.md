@@ -1,4 +1,4 @@
-# shelf
+# Shelf
 
 > Virtual Bookshelf
 
