@@ -9,6 +9,7 @@ export const store = new Vuex.Store({
     currentUser: null,
     userProfile: {},
     status: null,
+    currentShelf: 'default-reading',
     showNav: false
   },
   getters: {
@@ -26,7 +27,7 @@ export const store = new Vuex.Store({
     }
   },
   mutations: {
-    setUser: (state, payload) => {
+    setCurrentUser: (state, payload) => {
       state.currentUser = payload;
     },
     setUserProfile: (state, payload) => {
@@ -38,11 +39,11 @@ export const store = new Vuex.Store({
     setStatus: (state, payload) => {
       state.status = payload;
     },
-    changeNav: state => {
-      state.showNav = !state.showNav
+    setCurrentShelf: (state, payload) => {
+      state.currentShelf = payload;
     },
-    addToRead: (state, {book}) => {
-      state.read.unshift(book);
+    changeNav: state => {
+      state.showNav = !state.showNav;
     }
   },
   actions: {
@@ -52,10 +53,26 @@ export const store = new Vuex.Store({
         commit('setStatus', 'loading');
         fb.auth.createUserWithEmailAndPassword(payload.email, payload.password)
           .then(response => {
-            commit('setUser', response.user);
+            commit('setCurrentUser', response.user);
             fb.usersCollection.doc(response.user.uid).set({
               name: payload.name,
-              shelfRead: []
+              shelves: [
+                {
+                  name: 'Read',
+                  volumes: [],
+                  id: 'default-read'
+                },
+                {
+                  name: 'To be Read',
+                  volumes: [],
+                  id: 'default-tbr'
+                },
+                {
+                  name: 'Reading',
+                  volumes: [],
+                  id: 'default-reading'
+                }
+              ]
             })
           })
           .then(() => {
@@ -76,7 +93,7 @@ export const store = new Vuex.Store({
         commit('setStatus', 'loading');
         fb.auth.signInWithEmailAndPassword(payload.email, payload.password)
           .then(response => {
-            commit('setUser', response.user);
+            commit('setCurrentUser', response.user);
             dispatch('fetchUserProfile');
             commit('setStatus', 'success');
             resolve();
@@ -93,7 +110,7 @@ export const store = new Vuex.Store({
         console.log('Begin signOutAction');
         fb.auth.signOut()
           .then(() => {
-            commit('setUser', null);
+            commit('setCurrentUser', null);
             commit('setStatus', 'success');
             resolve();
           })
@@ -115,6 +132,55 @@ export const store = new Vuex.Store({
             resolve();
           }).catch(error => {
             console.log(error);
+            commit('setStatus', error.message);
+            reject();
+          })
+      })
+    },
+    addVolumeToShelf({commit, dispatch, state}, payload) {
+      return new Promise((resolve, reject) => {
+        console.log('Begin addVolumeToShelf');
+        const newShelves = state.userProfile.shelves;
+        newShelves.find((s) => s.id === payload.shelf).volumes.push(payload.book);
+        commit('setStatus', 'loading');
+        fb.usersCollection.doc(state.currentUser.uid).update({
+          shelves: newShelves
+        })
+          .then(() => {
+            dispatch('fetchUserProfile');
+            commit('setStatus', 'success');
+            resolve();
+          })
+          .catch((error) => {
+            console.log('error', error);
+            commit('setStatus', error.message);
+            reject();
+          })
+      })
+    },
+    updateShelves({commit, dispatch, state}) {
+      return new Promise((resolve, reject) => {
+        console.log('Begin updateShelves');
+        const shelves = state.userProfile.shelves;
+        console.log('shelves', shelves);
+        const newShelves = shelves.map((s) => {
+          let i;
+          for (i = 0; i < s.volumes.length; i++) {
+            s.volumes[i].expanded = false;
+          }
+          return s;
+        })
+        console.log('newShelves', newShelves);
+        fb.usersCollection.doc(state.currentUser.uid).update({
+          shelves: newShelves
+        })
+          .then(() => {
+            dispatch('fetchUserProfile');
+            commit('setStatus', 'success');
+            resolve();
+          })
+          .catch((error) => {
+            console.log('error', error);
             commit('setStatus', error.message);
             reject();
           })

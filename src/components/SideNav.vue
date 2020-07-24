@@ -6,7 +6,7 @@
     <div class="sidenav" :class="{open: showNav, close: !showNav}">
       <nav>
         <a href="javascript:void(0)" class="closebtn" @click="openNav">&times;</a>
-        <router-link to="/">Read</router-link>
+        <router-link to="/">Shelves</router-link>
         <router-link to="/add-book">Add a Book</router-link>
         <router-link to="/account">Account</router-link>
       </nav>
@@ -29,7 +29,6 @@ export default {
       'changeNav'
     ]),
     openNav() {
-      console.log(this.showNav);
       this.$store.commit('changeNav');
     }
   }
@@ -55,6 +54,7 @@ export default {
   padding-top: 60px; /* Place content 60px from the top */
   transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
   a {
+    white-space: nowrap;
     padding: 8px 8px 8px 32px;
     text-decoration: none;
     font-size: 25px;

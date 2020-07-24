@@ -26,21 +26,29 @@ export default {
 </script>
 
 <style lang="scss">
-body {
+html {
   box-sizing: border-box;
+  font-size: 10px;
+}
+body {
   margin: 0;
   background: #C0C0C0;
   font-family: 'Cabin', sans-serif;
+  font-size: 1.4rem;
 }
 h1, h2, h3, h4 {
   font-family: 'Roboto', sans-serif;
   margin: 0;
 }
+p { margin: 0; }
 .main-container {
   margin-left: 50px;
   transition: margin-left .5s;
   .section-with-margin {
-    padding: 50px;
+    padding: 15px;
+    @media (min-width: 768px) {
+      padding: 50px;
+    }
   }
 }
 .nav_open {

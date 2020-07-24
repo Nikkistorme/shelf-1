@@ -26,13 +26,11 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const currentUser = auth.currentUser;
 
-const shelvesCollection = db.collection('shelves');
 const usersCollection = db.collection('users');
 
 export {
   db,
   auth,
   currentUser,
-  shelvesCollection,
   usersCollection
 }

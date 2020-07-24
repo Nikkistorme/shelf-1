@@ -1,5 +1,5 @@
 <template>
-  <section>
+  <section class="section-with-margin">
     <div class="account-info">
       <h3>Your Account</h3>
       <h4 @click="logout">logout</h4>

@@ -1,60 +1,27 @@
 <template>
   <section class="search section-with-margin">
-    <form class="get-volume" v-on:submit.prevent="getVolume">
-      <input
-        type="text"
-        placeholder="keyword"
-        class="search-input"
-        v-model="search.keyword">
-      <input
-        type="text"
-        placeholder="author"
-        class="search-input"
-        v-model="search.author">
-      <button
-        type="submit"
-        @click="getVolume"
-        :disabled="!search.keyword && !search.author">
-        Search for Book
-      </button>
-    </form>
+    <AddBookForm :search="search" :getVolume="getVolume" />
     <div class="search-results" v-if="results">
-      <div
+      <BookSearchItem
         v-for="(book,i) in results"
-        :key="i">
-        <transition name="flip">
-          <div
-            class="search-results-item"
-            @click="flip(book)"
-            v-if="book.imageLinks && book.imageLinks.thumbnail && !book.flipped"
-            key="front">
-              <img
-                :src="book.imageLinks.thumbnail"
-                :alt="book.description">
-          </div>
-          <div
-            class="search-results-item back-side"
-            @click="flip(book)"
-            v-else
-            key="back">
-            <h3>{{book.title}}</h3>
-            <p>
-              <span v-for="(author, i) in book.authors" :key="i">
-                {{i === 0 ? author : `, ${author}`}}
-              </span>
-              </p>
-          </div>
-        </transition>
-      </div>
+        :key="i"
+        :book="book" />
     </div>
   </section>
 </template>
 
 <script>
 import {mapMutations} from 'vuex';
+import {defaultVolume, stringFromArrayOfStrings} from '../helpers';
+import AddBookForm from './AddBookForm.vue';
+import BookSearchItem from './BookSearchItem';
 const api = require('../../api.json');
 
 export default {
+  components: {
+    AddBookForm,
+    BookSearchItem
+  },
   data() {
     return {
       results: [],
@@ -65,9 +32,6 @@ export default {
     }
   },
   methods: {
-    ...mapMutations([
-      'addToRead'
-    ]),
     getVolume() {
       const keywordUrl = `${this.search.keyword}`;
       let authorUrl = '';
@@ -87,20 +51,23 @@ export default {
         .then(data => {
           const dataVolumes = data.items.map((v) => {
             if(v.volumeInfo) {
-              v.volumeInfo.flipped = false;
-              return v.volumeInfo;
+              let newVolume = Object.assign({}, defaultVolume, v.volumeInfo);
+              if (newVolume.authors) {
+                newVolume.author = stringFromArrayOfStrings(newVolume.authors)
+              }
+              delete newVolume.allowAnonLogging;
+              delete newVolume.averageRating;
+              delete newVolume.canonicalVolumeLink;
+              delete newVolume.infoLink;
+              delete newVolume.panelizationSummary;
+              delete newVolume.readingModes;
+              return newVolume;
             }
           })
           console.log('dataVolumes', dataVolumes);
           this.results = [];
           this.results = this.results.concat(dataVolumes);
         })
-    },
-    flip(book) {
-      book.flipped = !book.flipped;
-    },
-    addToShelf(volume) {
-      console.log(volume.title);
     }
   }
 }
@@ -108,47 +75,13 @@ export default {
 
 <style lang="scss">
 .search {
-  .get-volume {
-    display: flex;
-    flex-direction: column;
-  }
   .search-results {
     display: flex;
     flex-wrap: wrap;
-    &-item {
-      display: flex;
-      justify-content: center;
-      overflow: hidden;
-      height: 250px;
-      margin: 10px;
-      width: 175px;
-      border: 1px solid gray;
-      border-radius: 5px;
-      background-color: royalblue;
-      will-change: transform;
-      flex-direction: column;
-      &.back-side {
-        padding: 10px;
-        width: 155px;
-        height: 230px;
-      }
-      img {
-        width: auto;
-        height: 100%;
-        object-fit: scale-down;
-        cursor: pointer;
-      }
+    justify-content: space-between;
+    @media (min-width: 768px) {
+      justify-content: flex-start;
     }
-  }
-  .flip-enter-active {
-    transition: all 0.4s ease;
-  }
-  .flip-leave-active {
-    display: none;
-  }
-  .flip-enter, .flip-leave {
-    transform: rotateY(180deg);
-    opacity: 0;
   }
 }
 </style>

@@ -13,3 +13,4 @@ yarn-error.log
 .editorconfig
 api.json
 config.js
+.vscode/settings.json
